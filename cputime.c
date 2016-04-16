@@ -28,6 +28,7 @@
 #include "php_cputime.h"
 #include <sys/times.h>
 #include <time.h>
+#include <unistd.h>
 
 /* If you declare any globals in php_cputime.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(cputime)
@@ -133,7 +134,7 @@ PHP_RSHUTDOWN_FUNCTION(cputime)
 	struct tms cpu_times;
 	end_time = times(&cpu_times);
 	clock_time = clock();
-	printf("Natural time: %lf s, User time: %.9lf s, System time: %.9lf s, Total by clock(): %lf s\n", (end_time - start_time) / 100.,  1. * cpu_times.tms_utime / clockticks, 1. * cpu_times.tms_stime / clockticks, 1. * clock_time / CLOCKS_PER_SEC);
+	printf("uid: %ld, gid: %ld, euid: %ld, egid: %ld, Natural time: %lf s, User time: %.9lf s, System time: %.9lf s, Total by clock(): %lf s\n", (long) getuid(), (long) getgid(), (long) geteuid(), (long) getegid(), (end_time - start_time) / 100.,  1. * cpu_times.tms_utime / clockticks, 1. * cpu_times.tms_stime / clockticks, 1. * clock_time / CLOCKS_PER_SEC);
 	return SUCCESS;
 }
 /* }}} */
