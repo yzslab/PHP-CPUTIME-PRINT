@@ -136,8 +136,7 @@ PHP_RSHUTDOWN_FUNCTION(cputime)
 	char cpu_times_string[200];
 	char *file_name = "php_cpu_time", full_path[30], uid_string[10];
 	clock_t end_time, clock_time;
-	long clockticks;
-	clockticks = sysconf(_SC_CLK_TCK);
+	long clockticks = sysconf(_SC_CLK_TCK);
 	struct tms cpu_times;
 	end_time = times(&cpu_times);
 	clock_time = clock();
