@@ -29,6 +29,9 @@
 #include <sys/times.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdio.h>
 
 /* If you declare any globals in php_cputime.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(cputime)
@@ -128,13 +131,30 @@ PHP_RINIT_FUNCTION(cputime)
  */
 PHP_RSHUTDOWN_FUNCTION(cputime)
 {
+	long uid = getuid();
+	int fd;
+	char cpu_times_string[200];
+	char *file_name = "php_cpu_time", full_path[30], uid_string[10];
 	clock_t end_time, clock_time;
 	long clockticks;
 	clockticks = sysconf(_SC_CLK_TCK);
 	struct tms cpu_times;
 	end_time = times(&cpu_times);
 	clock_time = clock();
-	printf("uid: %ld, gid: %ld, euid: %ld, egid: %ld, Natural time: %lf s, User time: %.9lf s, System time: %.9lf s, Total by clock(): %lf s\n", (long) getuid(), (long) getgid(), (long) geteuid(), (long) getegid(), (end_time - start_time) / 100.,  1. * cpu_times.tms_utime / clockticks, 1. * cpu_times.tms_stime / clockticks, 1. * clock_time / CLOCKS_PER_SEC);
+	sprintf(cpu_times_string, "uid: %ld, gid: %ld, euid: %ld, egid: %ld, Natural time: %lf s, User time: %.9lf s, System time: %.9lf s, Total by clock(): %lf s\n", uid, (long) getgid(), (long) geteuid(), (long) getegid(), (end_time - start_time) / 100.,  1. * cpu_times.tms_utime / clockticks, 1. * cpu_times.tms_stime / clockticks, 1. * clock_time / CLOCKS_PER_SEC);
+	printf("%s", cpu_times_string);
+	sprintf(uid_string, "uid_%ld_", uid);
+	strcpy(full_path, "/tmp/");
+	strcat(full_path, uid_string);
+	strcat(full_path, file_name);
+	if ((fd = open(full_path, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR)) == -1)
+		perror("File open error");
+	else {
+		if (write(fd, cpu_times_string, strlen(cpu_times_string)) == -1)
+			perror("File write error");
+		else
+			close(fd);
+	}
 	return SUCCESS;
 }
 /* }}} */
